@@ -12,6 +12,7 @@ import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import FinancialPlans from "./pages/FinancialPlans";
 import FinancialPlanDetail from "./pages/FinancialPlanDetail";
+import Profile from "./pages/Profile";
 import AuthLayout from "./layouts/AuthLayout";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/clients/:id" element={<ClientDetail />} />
             <Route path="/financial-plans" element={<FinancialPlans />} />
             <Route path="/financial-plans/:id" element={<FinancialPlanDetail />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
           
           {/* Catch-all route */}
