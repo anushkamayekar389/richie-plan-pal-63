@@ -17,9 +17,60 @@ import {
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Plus, Search, User, Users2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useClients, type Client } from "@/hooks/use-clients";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
 
 const Clients = () => {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: clients = [], isLoading, refetch } = useClients();
+  
+  const form = useForm({
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone: "",
+      address: "",
+    },
+  });
+
+  const filteredClients = clients.filter((client) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      client.first_name.toLowerCase().includes(query) ||
+      client.last_name.toLowerCase().includes(query) ||
+      client.email.toLowerCase().includes(query)
+    );
+  });
+
+  const onSubmit = async (values: any) => {
+    try {
+      const { error } = await supabase.from("clients").insert([values]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Client added successfully",
+        description: `${values.first_name} ${values.last_name} has been added to your clients`,
+      });
+      
+      setOpen(false);
+      form.reset();
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error adding client",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -41,36 +92,83 @@ const Clients = () => {
                 Enter the client's details to create a new profile.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" placeholder="John" />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" placeholder="Doe" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="johndoe@example.com" type="email" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone number</Label>
-                <Input id="phone" placeholder="+91 98765 43210" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" placeholder="123 Main Street, Mumbai" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => setOpen(false)}>Save Client</Button>
-            </DialogFooter>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="johndoe@example.com" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+91 98765 43210" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123 Main Street, Mumbai" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Client</Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
@@ -79,7 +177,9 @@ const Clients = () => {
         <Search className="w-4 h-4 text-gray-400" />
         <Input 
           placeholder="Search clients..." 
-          className="max-w-sm" 
+          className="max-w-sm"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
@@ -98,55 +198,71 @@ const Clients = () => {
                 All Clients
               </CardTitle>
               <CardDescription>
-                Showing 28 clients in your portfolio
+                {isLoading 
+                  ? "Loading clients..." 
+                  : `Showing ${filteredClients.length} client${filteredClients.length !== 1 ? 's' : ''} in your portfolio`
+                }
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <Link to={`/clients/${index + 1}`} key={index} className="block">
-                    <div className="rounded-lg border p-4 hover:border-primary transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="w-5 h-5 text-primary" />
+              {isLoading ? (
+                <div className="flex justify-center items-center py-20">
+                  <p className="text-gray-500">Loading clients...</p>
+                </div>
+              ) : filteredClients.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <p className="text-gray-500 mb-4">No clients found</p>
+                  <Button onClick={() => setOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Your First Client
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                  {filteredClients.map((client, index) => (
+                    <Link to={`/clients/${client.id}`} key={client.id} className="block">
+                      <div className="rounded-lg border p-4 hover:border-primary transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <User className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {client.first_name} {client.last_name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Added {format(new Date(client.created_at), 'MMM yyyy')}
+                              </p>
+                            </div>
+                          </div>
+                          {index === 2 && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertCircle className="w-4 h-4 text-yellow-500" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Review due</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                        <div className="mt-4 flex justify-between text-sm">
+                          <div>
+                            <p className="text-gray-500">Email</p>
+                            <p className="font-medium truncate max-w-[120px]">{client.email}</p>
                           </div>
                           <div>
-                            <p className="font-medium">
-                              {["Amit Shah", "Priya Patel", "Raj Mehta", "Neha Sharma", "Vikram Singh", "Kiran Joshi", "Meera Reddy", "Sanjay Gupta"][index]}
-                            </p>
-                            <p className="text-sm text-gray-500">Added {["Jan", "Feb", "Mar", "Apr", "May", "Jun"][index % 6]} 2023</p>
+                            <p className="text-gray-500">Phone</p>
+                            <p className="font-medium">{client.phone || "—"}</p>
                           </div>
                         </div>
-                        {index === 2 && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <AlertCircle className="w-4 h-4 text-yellow-500" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Review due</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
                       </div>
-                      <div className="mt-4 flex justify-between text-sm">
-                        <div>
-                          <p className="text-gray-500">Plans</p>
-                          <p className="font-medium">{index + 1}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Last Review</p>
-                          <p className="font-medium">{["1w", "2w", "3w", "1m", "2m", "3m"][index % 6]} ago</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">AUM</p>
-                          <p className="font-medium">₹{((index + 1) * 5)}L</p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
