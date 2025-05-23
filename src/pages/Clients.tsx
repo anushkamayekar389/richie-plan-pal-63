@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Plus, Search, User, Users2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Clients = () => {
   const [open, setOpen] = useState(false);
@@ -118,7 +119,14 @@ const Clients = () => {
                           </div>
                         </div>
                         {index === 2 && (
-                          <AlertCircle className="w-4 h-4 text-yellow-500" title="Review due" />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertCircle className="w-4 h-4 text-yellow-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Review due</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                       <div className="mt-4 flex justify-between text-sm">
