@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Calculator, Users, FileText, Menu } from "lucide-react";
 import { useState } from "react";
 
-export const Header = () => {
+interface HeaderProps {
+  children?: React.ReactNode;
+}
+
+export const Header = ({ children }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -30,12 +34,16 @@ export const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
-              Sign In
-            </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              Start Free Trial
-            </Button>
+            {children ? children : (
+              <>
+                <Button variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                  Sign In
+                </Button>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Start Free Trial
+                </Button>
+              </>
+            )}
           </div>
 
           <div className="md:hidden">
@@ -55,12 +63,16 @@ export const Header = () => {
               <a href="#pricing" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Pricing</a>
               <a href="#about" className="block px-3 py-2 text-gray-700 hover:text-blue-600">About</a>
               <div className="pt-2 space-y-2">
-                <Button variant="outline" className="w-full text-blue-600 border-blue-600">
-                  Sign In
-                </Button>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  Start Free Trial
-                </Button>
+                {children ? children : (
+                  <>
+                    <Button variant="outline" className="w-full text-blue-600 border-blue-600">
+                      Sign In
+                    </Button>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                      Start Free Trial
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
