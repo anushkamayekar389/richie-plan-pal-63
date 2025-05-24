@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,6 +13,50 @@ import { DocumentsStep } from "./onboarding/DocumentsStep";
 import { RiskProfileStep } from "./onboarding/RiskProfileStep";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+
+interface ClientData {
+  // Personal Info
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  
+  // Financial Info
+  monthly_income?: number;
+  monthly_expenses?: number;
+  additional_income?: number;
+  total_assets?: number;
+  total_liabilities?: number;
+  emergency_fund?: number;
+  
+  // Employment Info
+  employment_type?: string;
+  employer?: string;
+  years_of_experience?: number;
+  
+  // Risk Profile
+  risk_score?: number;
+  risk_profile?: string;
+  investment_horizon?: string;
+  investment_knowledge?: string;
+  market_volatility?: string;
+  portfolio_loss?: string;
+  risk_tolerance?: string;
+  
+  // Documents
+  pan_number?: string;
+  aadhaar_number?: string;
+  voter_id?: string;
+  passport_number?: string;
+  bank_account?: string;
+  bank_name?: string;
+  branch_name?: string;
+  ifsc_code?: string;
+  
+  // Other fields that might be added by steps
+  [key: string]: any;
+}
 
 interface ClientOnboardingFlowProps {
   onClose: () => void;
@@ -33,7 +76,7 @@ const steps = [
 
 export function ClientOnboardingFlow({ onClose, onComplete }: ClientOnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [clientData, setClientData] = useState({});
+  const [clientData, setClientData] = useState<ClientData>({});
   const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   const progress = (currentStep / steps.length) * 100;
