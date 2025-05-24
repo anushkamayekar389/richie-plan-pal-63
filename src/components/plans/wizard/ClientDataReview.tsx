@@ -1,5 +1,4 @@
 
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -106,40 +105,19 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     }
   });
 
-  // Function to get effective financial data (with fallbacks)
-  const getEffectiveFinancialData = () => {
-    if (financialData) {
-      return financialData;
-    }
-
-    // Use client data as fallback if available
-    return {
-      monthly_income: client.annual_income ? client.annual_income / 12 : null,
-      monthly_expenses: null,
-      total_assets: null,
-      total_liabilities: null,
-      emergency_fund: null,
-      additional_income: null
-    };
-  };
-
   useEffect(() => {
     if (financialLoading || riskLoading) return;
-
-    const effectiveFinancialData = getEffectiveFinancialData();
     
     // Calculate completion score with improved logic
     let score = 0;
     const checks = [
-      { condition: !!(client.first_name && client.last_name), weight: 15, label: "Full Name" },
-      { condition: !!client.email, weight: 15, label: "Email" },
-      { condition: !!client.phone, weight: 5, label: "Phone" },
-      { condition: !!client.address, weight: 5, label: "Address" },
-      { condition: !!(effectiveFinancialData?.monthly_income || client.annual_income), weight: 25, label: "Income Data" },
-      { condition: !!effectiveFinancialData?.monthly_expenses, weight: 15, label: "Monthly Expenses" },
-      { condition: !!effectiveFinancialData?.total_assets, weight: 10, label: "Total Assets" },
-      { condition: !!effectiveFinancialData?.total_liabilities, weight: 5, label: "Total Liabilities" },
-      { condition: !!riskProfile?.risk_profile, weight: 5, label: "Risk Profile" }
+      { condition: !!(client.first_name && client.last_name), weight: 20, label: "Full Name" },
+      { condition: !!client.email, weight: 20, label: "Email" },
+      { condition: !!client.phone, weight: 10, label: "Phone" },
+      { condition: !!client.address, weight: 10, label: "Address" },
+      { condition: !!financialData?.monthly_income, weight: 25, label: "Income Data" },
+      { condition: !!financialData?.monthly_expenses, weight: 10, label: "Monthly Expenses" },
+      { condition: !!financialData?.total_assets, weight: 5, label: "Total Assets" }
     ];
 
     checks.forEach(check => {
@@ -151,16 +129,14 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       checks, 
       client, 
       financialData, 
-      effectiveFinancialData, 
       riskProfile 
     });
     
     setCompletionScore(score);
     
-    // Lower threshold to 35% and be more flexible with basic data
-    const hasBasicData = !!(client.first_name && client.email && 
-      (effectiveFinancialData?.monthly_income || client.annual_income));
-    const canProceed = Boolean(score >= 35 || hasBasicData);
+    // Lower threshold to 30% and be more flexible with basic data
+    const hasBasicData = !!(client.first_name && client.email);
+    const canProceed = Boolean(score >= 30 || hasBasicData);
     
     console.log('Can proceed check:', { score, hasBasicData, canProceed });
     onDataComplete(canProceed);
@@ -193,8 +169,6 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     );
   }
 
-  const effectiveFinancialData = getEffectiveFinancialData();
-
   const dataCompleteness = [
     {
       category: "Personal Information",
@@ -212,26 +186,25 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       items: [
         { 
           label: "Monthly Income", 
-          value: effectiveFinancialData?.monthly_income ? `₹${effectiveFinancialData.monthly_income.toLocaleString()}` : 
-                 (client.annual_income ? `₹${(client.annual_income / 12).toLocaleString()} (estimated)` : "Not provided"), 
-          complete: !!(effectiveFinancialData?.monthly_income || client.annual_income), 
+          value: financialData?.monthly_income ? `₹${financialData.monthly_income.toLocaleString()}` : "Not provided", 
+          complete: !!financialData?.monthly_income, 
           critical: true 
         },
         { 
           label: "Monthly Expenses", 
-          value: effectiveFinancialData?.monthly_expenses ? `₹${effectiveFinancialData.monthly_expenses.toLocaleString()}` : "Not provided", 
-          complete: !!effectiveFinancialData?.monthly_expenses, 
+          value: financialData?.monthly_expenses ? `₹${financialData.monthly_expenses.toLocaleString()}` : "Not provided", 
+          complete: !!financialData?.monthly_expenses, 
           critical: false 
         },
         { 
           label: "Total Assets", 
-          value: effectiveFinancialData?.total_assets ? `₹${effectiveFinancialData.total_assets.toLocaleString()}` : "Not provided", 
-          complete: !!effectiveFinancialData?.total_assets, 
+          value: financialData?.total_assets ? `₹${financialData.total_assets.toLocaleString()}` : "Not provided", 
+          complete: !!financialData?.total_assets, 
           critical: false 
         },
         { 
           label: "Total Liabilities", 
-          value: effectiveFinancialData?.total_liabilities ? `₹${effectiveFinancialData.total_liabilities.toLocaleString()}` : "₹0 (assumed)", 
+          value: financialData?.total_liabilities ? `₹${financialData.total_liabilities.toLocaleString()}` : "₹0 (assumed)", 
           complete: true, 
           critical: false 
         }
@@ -269,12 +242,12 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Client Data Review</h3>
         <div className="flex items-center space-x-2">
-          <Badge variant={completionScore >= 50 ? "default" : completionScore >= 35 ? "secondary" : "destructive"}>
+          <Badge variant={completionScore >= 50 ? "default" : completionScore >= 30 ? "secondary" : "destructive"}>
             {completionScore}% Complete
           </Badge>
           {completionScore >= 50 ? (
             <CheckCircle className="w-5 h-5 text-green-500" />
-          ) : completionScore >= 35 ? (
+          ) : completionScore >= 30 ? (
             <CheckCircle className="w-5 h-5 text-yellow-500" />
           ) : (
             <AlertCircle className="w-5 h-5 text-red-500" />
@@ -305,7 +278,7 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
         </Card>
       )}
 
-      {completionScore < 35 && missingCriticalFields.length > 0 ? (
+      {completionScore < 30 && missingCriticalFields.length > 0 ? (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-4">
             <div className="space-y-3">
@@ -433,4 +406,3 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     </div>
   );
 }
-
