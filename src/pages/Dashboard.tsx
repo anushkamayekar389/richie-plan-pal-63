@@ -1,10 +1,88 @@
-
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CalendarDays, FileText, BarChart4, AlertCircle, ArrowRight, Users } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useFinancialPlanGenerator } from "@/hooks/use-financial-plan-generator";
+import { FinancialPlanPreview } from "@/components/FinancialPlanPreview";
+import { FinancialPlanInput } from "@/services/financialPlanGenerator";
 
 const Dashboard = () => {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState<Partial<FinancialPlanInput>>({
+    planName: "",
+    clientId: "",
+    planType: "comprehensive",
+    template: "standard",
+    timeHorizon: 10,
+    riskTolerance: "moderate"
+  });
+  
+  const { generatePlan, isGenerating, generatedPlan, clearPlan } = useFinancialPlanGenerator();
+
+  const handleGeneratePlan = async () => {
+    if (!formData.planName || !formData.clientId) {
+      return;
+    }
+
+    try {
+      await generatePlan(formData as FinancialPlanInput);
+      setOpen(false);
+    } catch (error) {
+      console.error('Failed to generate plan:', error);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    console.log('Downloading PDF...');
+    // PDF generation logic will be implemented later
+  };
+
+  const handleSharePlan = () => {
+    console.log('Sharing plan...');
+    // Share functionality will be implemented later
+  };
+
+  if (generatedPlan) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Generated Financial Plan</h1>
+            <p className="text-gray-500">Review and customize your financial plan</p>
+          </div>
+          <Button variant="outline" onClick={clearPlan}>
+            Back to Dashboard
+          </Button>
+        </div>
+        
+        <FinancialPlanPreview 
+          plan={generatedPlan}
+          onDownload={handleDownloadPDF}
+          onShare={handleSharePlan}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -12,7 +90,90 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-gray-500">Welcome back, Rahul! Here's an overview of your financial advisory practice.</p>
         </div>
-        <Button>Create New Financial Plan</Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>Create New Financial Plan</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create Financial Plan</DialogTitle>
+              <DialogDescription>
+                Fill in the details to generate a new financial plan.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="plan-name">Plan Name</Label>
+                <Input 
+                  id="plan-name" 
+                  placeholder="Retirement Plan"
+                  value={formData.planName}
+                  onChange={(e) => setFormData({...formData, planName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="client">Client</Label>
+                <Select onValueChange={(value) => setFormData({...formData, clientId: value})}>
+                  <SelectTrigger id="client">
+                    <SelectValue placeholder="Select client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="client-1">Amit Shah</SelectItem>
+                    <SelectItem value="client-2">Priya Patel</SelectItem>
+                    <SelectItem value="client-3">Raj Mehta</SelectItem>
+                    <SelectItem value="client-4">Neha Sharma</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="plan-type">Plan Type</Label>
+                <Select onValueChange={(value: any) => setFormData({...formData, planType: value})}>
+                  <SelectTrigger id="plan-type">
+                    <SelectValue placeholder="Select plan type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="comprehensive">Comprehensive</SelectItem>
+                    <SelectItem value="retirement">Retirement</SelectItem>
+                    <SelectItem value="education">Education</SelectItem>
+                    <SelectItem value="tax">Tax Planning</SelectItem>
+                    <SelectItem value="insurance">Insurance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="template">Template</Label>
+                <Select onValueChange={(value: any) => setFormData({...formData, template: value})}>
+                  <SelectTrigger id="template">
+                    <SelectValue placeholder="Select template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="detailed">Detailed</SelectItem>
+                    <SelectItem value="executive">Executive Summary</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time-horizon">Time Horizon (Years)</Label>
+                <Input 
+                  id="time-horizon" 
+                  type="number"
+                  placeholder="10"
+                  value={formData.timeHorizon}
+                  onChange={(e) => setFormData({...formData, timeHorizon: parseInt(e.target.value) || 10})}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleGeneratePlan} disabled={isGenerating}>
+                {isGenerating ? "Generating..." : "Generate Plan"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
