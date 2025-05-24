@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface FinancialPlanInput {
@@ -35,36 +34,58 @@ export class FinancialPlanGenerator {
   async generatePlan(input: FinancialPlanInput): Promise<GeneratedFinancialPlan> {
     console.log('Generating financial plan for:', input);
     
-    // Fetch client data
-    const clientData = await this.fetchClientData(input.clientId);
-    const financialData = await this.fetchFinancialData(input.clientId);
-    const riskProfile = await this.fetchRiskProfile(input.clientId);
+    try {
+      // Fetch client data
+      const clientData = await this.fetchClientData(input.clientId);
+      const financialData = await this.fetchFinancialData(input.clientId);
+      const riskProfile = await this.fetchRiskProfile(input.clientId);
 
-    // Generate plan sections based on type and template
-    const sections = await this.generatePlanSections(input, clientData, financialData, riskProfile);
-    
-    // Calculate summary metrics
-    const summary = this.calculateSummary(financialData, riskProfile, input.timeHorizon);
+      console.log('Client data:', clientData);
+      console.log('Financial data:', financialData);
+      console.log('Risk profile:', riskProfile);
 
-    return {
-      id: crypto.randomUUID(),
-      planName: input.planName,
-      clientName: `${clientData.first_name} ${clientData.last_name}`,
-      generatedDate: new Date().toISOString(),
-      sections,
-      summary
-    };
+      // Generate plan sections based on type and template
+      const sections = await this.generatePlanSections(input, clientData, financialData, riskProfile);
+      
+      // Calculate summary metrics
+      const summary = this.calculateSummary(financialData, riskProfile, input.timeHorizon);
+
+      return {
+        id: crypto.randomUUID(),
+        planName: input.planName,
+        clientName: `${clientData.first_name} ${clientData.last_name}`,
+        generatedDate: new Date().toISOString(),
+        sections,
+        summary
+      };
+    } catch (error) {
+      console.error('Error in generatePlan:', error);
+      throw new Error(`Failed to generate financial plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async fetchClientData(clientId: string) {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('id', clientId)
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', clientId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching client data:', error);
+        throw new Error(`Client not found: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('Client data is empty');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('fetchClientData error:', error);
+      throw error;
+    }
   }
 
   private async fetchFinancialData(clientId: string) {
@@ -117,23 +138,29 @@ export class FinancialPlanGenerator {
     // Executive Summary
     sections.push({
       title: "Executive Summary",
-      content: `This comprehensive financial plan for ${clientData.first_name} ${clientData.last_name} outlines a strategic approach to achieving financial goals over the next ${input.timeHorizon} years. Based on current financial position and risk tolerance, we recommend a ${riskProfile.risk_profile} investment strategy.`,
+      content: `This comprehensive financial plan for ${clientData.first_name} ${clientData.last_name} outlines a strategic approach to achieving financial goals over the next ${input.timeHorizon} years. Based on current financial position and ${riskProfile.risk_profile} risk tolerance, we recommend a balanced investment strategy tailored to your specific needs.`,
       recommendations: [
         "Maintain emergency fund of 6 months expenses",
-        `Follow ${riskProfile.risk_profile} investment allocation`,
-        "Review and adjust plan annually"
+        `Follow ${riskProfile.risk_profile} investment allocation strategy`,
+        "Review and adjust plan annually",
+        "Monitor progress quarterly"
       ]
     });
 
     // Current Financial Position
-    const netWorth = financialData.total_assets - financialData.total_liabilities;
+    const netWorth = (financialData.total_assets || 0) - (financialData.total_liabilities || 0);
+    const monthlyIncome = financialData.monthly_income || 50000;
+    const monthlyExpenses = financialData.monthly_expenses || 30000;
+    const monthlySurplus = monthlyIncome - monthlyExpenses;
+    
     sections.push({
       title: "Current Financial Position",
-      content: `Current net worth stands at ₹${netWorth.toLocaleString()}. Monthly income of ₹${financialData.monthly_income.toLocaleString()} with expenses of ₹${financialData.monthly_expenses.toLocaleString()} provides a monthly surplus of ₹${(financialData.monthly_income - financialData.monthly_expenses).toLocaleString()}.`,
+      content: `Your current net worth stands at ₹${netWorth.toLocaleString()}. With a monthly income of ₹${monthlyIncome.toLocaleString()} and expenses of ₹${monthlyExpenses.toLocaleString()}, you have a monthly surplus of ₹${monthlySurplus.toLocaleString()} available for investments and savings.`,
       recommendations: [
-        "Optimize expense ratio to increase savings",
-        "Build emergency fund to recommended level",
-        "Consider tax-efficient investment options"
+        monthlySurplus > 0 ? "Leverage positive cash flow for systematic investments" : "Focus on expense optimization to improve cash flow",
+        "Build emergency fund to recommended level of 6 months expenses",
+        "Consider tax-efficient investment options like ELSS and PPF",
+        "Review and optimize existing investments"
       ]
     });
 
@@ -152,9 +179,10 @@ export class FinancialPlanGenerator {
         title: "Retirement Planning",
         content: this.generateRetirementPlan(financialData, input.timeHorizon),
         recommendations: [
-          "Maximize EPF contributions",
-          "Consider NPS for additional tax benefits",
-          "Review retirement corpus annually"
+          "Maximize EPF contributions for tax benefits",
+          "Consider NPS for additional retirement corpus",
+          "Start SIP in equity mutual funds for long-term growth",
+          "Review retirement corpus requirement annually"
         ]
       });
     }
@@ -163,11 +191,12 @@ export class FinancialPlanGenerator {
     if (input.planType === 'comprehensive' || input.planType === 'tax') {
       sections.push({
         title: "Tax Planning",
-        content: "Optimize tax liability through strategic use of deductions under Section 80C, 80D, and other applicable sections.",
+        content: "Strategic tax planning can significantly enhance your wealth accumulation. Utilize various deductions under Section 80C, 80D, and other applicable sections to optimize your tax liability while building wealth.",
         recommendations: [
-          "Utilize full 80C limit of ₹1.5 lakhs",
-          "Consider ELSS for tax-saving investments",
-          "Plan capital gains harvesting"
+          "Maximize Section 80C deductions (₹1.5 lakh limit)",
+          "Invest in ELSS mutual funds for tax-saving with growth potential",
+          "Consider health insurance for Section 80D benefits",
+          "Plan capital gains harvesting for tax efficiency"
         ]
       });
     }
@@ -178,9 +207,10 @@ export class FinancialPlanGenerator {
         title: "Insurance Planning",
         content: this.generateInsurancePlan(financialData),
         recommendations: [
-          "Maintain life cover of 10-15x annual income",
-          "Ensure adequate health insurance coverage",
-          "Review insurance needs annually"
+          "Maintain life insurance cover of 10-15x annual income",
+          "Ensure adequate health insurance for family",
+          "Consider term insurance for cost-effective coverage",
+          "Review insurance needs with life stage changes"
         ]
       });
     }

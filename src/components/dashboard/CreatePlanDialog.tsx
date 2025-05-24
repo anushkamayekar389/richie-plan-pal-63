@@ -20,7 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFinancialPlanGenerator } from "@/hooks/use-financial-plan-generator";
+import { useClients } from "@/hooks/use-clients";
 import { FinancialPlanInput } from "@/services/financialPlanGenerator";
+import { toast } from "@/hooks/use-toast";
 
 export function CreatePlanDialog() {
   const [open, setOpen] = useState(false);
@@ -34,15 +36,41 @@ export function CreatePlanDialog() {
   });
   
   const { generatePlan, isGenerating } = useFinancialPlanGenerator();
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
 
   const handleGeneratePlan = async () => {
     if (!formData.planName || !formData.clientId) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a client and enter a plan name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Find the selected client
+    const selectedClient = clients.find(client => client.id === formData.clientId);
+    if (!selectedClient) {
+      toast({
+        title: "Client Not Found",
+        description: "Please select a valid client",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
       await generatePlan(formData as FinancialPlanInput);
       setOpen(false);
+      // Reset form
+      setFormData({
+        planName: "",
+        clientId: "",
+        planType: "comprehensive",
+        template: "standard",
+        timeHorizon: 10,
+        riskTolerance: "moderate"
+      });
     } catch (error) {
       console.error('Failed to generate plan:', error);
     }
@@ -72,15 +100,25 @@ export function CreatePlanDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="client">Client</Label>
-            <Select onValueChange={(value) => setFormData({...formData, clientId: value})}>
+            <Select 
+              onValueChange={(value) => setFormData({...formData, clientId: value})}
+              value={formData.clientId}
+            >
               <SelectTrigger id="client">
-                <SelectValue placeholder="Select client" />
+                <SelectValue placeholder={clientsLoading ? "Loading clients..." : "Select client"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="client-1">Amit Shah</SelectItem>
-                <SelectItem value="client-2">Priya Patel</SelectItem>
-                <SelectItem value="client-3">Raj Mehta</SelectItem>
-                <SelectItem value="client-4">Neha Sharma</SelectItem>
+                {clients.length === 0 ? (
+                  <SelectItem value="no-clients" disabled>
+                    No clients found - Add clients first
+                  </SelectItem>
+                ) : (
+                  clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.first_name} {client.last_name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -127,7 +165,10 @@ export function CreatePlanDialog() {
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={handleGeneratePlan} disabled={isGenerating}>
+          <Button 
+            onClick={handleGeneratePlan} 
+            disabled={isGenerating || !formData.clientId || !formData.planName}
+          >
             {isGenerating ? "Generating..." : "Generate Plan"}
           </Button>
         </DialogFooter>
