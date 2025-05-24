@@ -9,9 +9,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface ClientCardProps {
   client: Client;
   index: number;
+  onGeneratePlan?: (client: Client) => void;
 }
 
-export const ClientCard = ({ client, index }: ClientCardProps) => {
+export const ClientCard = ({ client, index, onGeneratePlan }: ClientCardProps) => {
   const isMobile = useIsMobile();
 
   return (
