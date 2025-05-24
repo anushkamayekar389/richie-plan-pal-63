@@ -11,7 +11,8 @@ import {
   Calculator, 
   Settings,
   LogOut,
-  User
+  User,
+  Users2
 } from "lucide-react";
 
 export function Sidebar() {
@@ -24,6 +25,7 @@ export function Sidebar() {
     { name: "Financial Plans", href: "/financial-plans", icon: FileText },
     { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Calculators", href: "/calculators", icon: Calculator },
+    { name: "Team", href: "/team", icon: Users2 },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 

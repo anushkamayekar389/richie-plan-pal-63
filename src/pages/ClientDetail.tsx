@@ -1,12 +1,13 @@
 
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Pencil } from "lucide-react";
+import { ChevronLeft, FileText, Pencil, Users, Share } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ClientSharingDialog } from "@/components/ClientSharingDialog";
 
 const ClientDetail = () => {
   const { id } = useParams();
@@ -60,9 +61,12 @@ const ClientDetail = () => {
             <p className="text-gray-500">Client since {format(new Date(client.created_at), 'MMMM yyyy')}</p>
           </div>
         </div>
-        <Button>
-          <Pencil className="w-4 h-4 mr-2" /> Edit Client
-        </Button>
+        <div className="flex space-x-2">
+          <ClientSharingDialog clientId={client.id} clientName={`${client.first_name} ${client.last_name}`} />
+          <Button>
+            <Pencil className="w-4 h-4 mr-2" /> Edit Client
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -92,6 +96,7 @@ const ClientDetail = () => {
               <TabsTrigger value="plans">Financial Plans</TabsTrigger>
               <TabsTrigger value="investments">Investments</TabsTrigger>
               <TabsTrigger value="insurance">Insurance</TabsTrigger>
+              <TabsTrigger value="team">Team Access</TabsTrigger>
             </TabsList>
             <TabsContent value="plans" className="mt-6">
               <Card>
@@ -128,6 +133,22 @@ const ClientDetail = () => {
                 <CardContent>
                   <p className="text-gray-500 text-center py-8">
                     No insurance policies found for this client.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="team" className="mt-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <Users className="w-5 h-5 mr-2" />
+                    Team Access
+                  </CardTitle>
+                  <ClientSharingDialog clientId={client.id} clientName={`${client.first_name} ${client.last_name}`} />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-500 text-center py-8">
+                    Manage team member access to this client's information.
                   </p>
                 </CardContent>
               </Card>

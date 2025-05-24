@@ -15,6 +15,7 @@ import FinancialPlanDetail from "./pages/FinancialPlanDetail";
 import Profile from "./pages/Profile";
 import Calculators from "./pages/Calculators";
 import Calendar from "./pages/Calendar";
+import Team from "./pages/Team";
 import AuthLayout from "./layouts/AuthLayout";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/financial-plans/:id" element={<FinancialPlanDetail />} />
             <Route path="/calculators" element={<Calculators />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/team" element={<Team />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           
