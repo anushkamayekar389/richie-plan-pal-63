@@ -1,11 +1,12 @@
 
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle, User, DollarSign, Target, Shield, Plus } from "lucide-react";
 import { type Client } from "@/hooks/use-clients";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -16,8 +17,9 @@ interface ClientDataReviewProps {
 
 export function ClientDataReview({ client, onDataComplete }: ClientDataReviewProps) {
   const [completionScore, setCompletionScore] = useState(0);
+  const queryClient = useQueryClient();
 
-  // Fetch client's financial data with error handling
+  // Fetch client's financial data with improved error handling
   const { data: financialData, isLoading: financialLoading, error: financialError } = useQuery({
     queryKey: ['client-financial-data', client.id],
     queryFn: async () => {
@@ -38,11 +40,11 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
         return null;
       }
     },
-    retry: 2
+    retry: 1
   });
 
-  // Fetch client's risk profile with error handling
-  const { data: riskProfile, isLoading: riskLoading, error: riskError } = useQuery({
+  // Fetch client's risk profile
+  const { data: riskProfile, isLoading: riskLoading } = useQuery({
     queryKey: ['risk-profile', client.id],
     queryFn: async () => {
       try {
@@ -54,7 +56,7 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
         
         if (error && error.code !== 'PGRST116') {
           console.error('Risk profile query error:', error);
-          throw error;
+          return null;
         }
         return data;
       } catch (error) {
@@ -62,21 +64,81 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
         return null;
       }
     },
-    retry: 2
+    retry: 1
   });
 
+  // Mutation to create financial data record
+  const createFinancialDataMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      const defaultData = {
+        client_id: clientId,
+        monthly_income: 50000, // Default value
+        monthly_expenses: 30000, // Default value
+        total_assets: 100000, // Default value
+        total_liabilities: 20000, // Default value
+        emergency_fund: 30000, // Default value
+        additional_income: 0
+      };
+
+      const { data, error } = await supabase
+        .from('client_financial_data')
+        .insert(defaultData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-financial-data', client.id] });
+      toast({
+        title: "Financial data created",
+        description: "Default financial data has been created for this client",
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating financial data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create financial data",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Function to get effective financial data (with fallbacks)
+  const getEffectiveFinancialData = () => {
+    if (financialData) {
+      return financialData;
+    }
+
+    // Use client data as fallback if available
+    return {
+      monthly_income: client.annual_income ? client.annual_income / 12 : null,
+      monthly_expenses: null,
+      total_assets: null,
+      total_liabilities: null,
+      emergency_fund: null,
+      additional_income: null
+    };
+  };
+
   useEffect(() => {
-    // Calculate completion score with more comprehensive checks
+    if (financialLoading || riskLoading) return;
+
+    const effectiveFinancialData = getEffectiveFinancialData();
+    
+    // Calculate completion score with improved logic
     let score = 0;
     const checks = [
-      { condition: !!(client.first_name && client.last_name), weight: 10, label: "Full Name" },
-      { condition: !!client.email, weight: 10, label: "Email" },
+      { condition: !!(client.first_name && client.last_name), weight: 15, label: "Full Name" },
+      { condition: !!client.email, weight: 15, label: "Email" },
       { condition: !!client.phone, weight: 5, label: "Phone" },
       { condition: !!client.address, weight: 5, label: "Address" },
-      { condition: !!financialData?.monthly_income, weight: 20, label: "Monthly Income" },
-      { condition: !!financialData?.monthly_expenses, weight: 20, label: "Monthly Expenses" },
-      { condition: !!financialData?.total_assets, weight: 15, label: "Total Assets" },
-      { condition: !!financialData?.total_liabilities, weight: 10, label: "Total Liabilities" },
+      { condition: !!(effectiveFinancialData?.monthly_income || client.annual_income), weight: 25, label: "Income Data" },
+      { condition: !!effectiveFinancialData?.monthly_expenses, weight: 15, label: "Monthly Expenses" },
+      { condition: !!effectiveFinancialData?.total_assets, weight: 10, label: "Total Assets" },
+      { condition: !!effectiveFinancialData?.total_liabilities, weight: 5, label: "Total Liabilities" },
       { condition: !!riskProfile?.risk_profile, weight: 5, label: "Risk Profile" }
     ];
 
@@ -84,24 +146,32 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       if (check.condition) score += check.weight;
     });
 
-    console.log('Completion score calculation:', { score, checks, client, financialData, riskProfile });
+    console.log('Completion score calculation:', { 
+      score, 
+      checks, 
+      client, 
+      financialData, 
+      effectiveFinancialData, 
+      riskProfile 
+    });
+    
     setCompletionScore(score);
     
-    // Lower threshold to 50% and allow progression with basic data
-    const hasBasicData = !!(client.first_name && client.email && (financialData?.monthly_income || financialData?.total_assets));
-    const canProceed = Boolean(score >= 50 || hasBasicData);
+    // Lower threshold to 35% and be more flexible with basic data
+    const hasBasicData = !!(client.first_name && client.email && 
+      (effectiveFinancialData?.monthly_income || client.annual_income));
+    const canProceed = Boolean(score >= 35 || hasBasicData);
+    
+    console.log('Can proceed check:', { score, hasBasicData, canProceed });
     onDataComplete(canProceed);
-  }, [client, financialData, riskProfile, onDataComplete]);
+  }, [client, financialData, riskProfile, onDataComplete, financialLoading, riskLoading]);
 
-  const handleAddMissingData = () => {
-    toast({
-      title: "Quick Data Entry",
-      description: "You can add missing financial data from the client profile page",
-    });
+  const handleCreateFinancialData = () => {
+    createFinancialDataMutation.mutate(client.id);
   };
 
   const handleProceedAnyway = () => {
-    console.log('User chose to proceed with limited data');
+    console.log('User chose to proceed with available data');
     onDataComplete(true);
     toast({
       title: "Proceeding with available data",
@@ -109,7 +179,7 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     });
   };
 
-  // Handle loading and error states
+  // Handle loading states
   if (financialLoading || riskLoading) {
     return (
       <div className="space-y-6">
@@ -123,9 +193,7 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     );
   }
 
-  if (financialError || riskError) {
-    console.error('Data loading errors:', { financialError, riskError });
-  }
+  const effectiveFinancialData = getEffectiveFinancialData();
 
   const dataCompleteness = [
     {
@@ -142,10 +210,31 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       category: "Financial Information",
       icon: DollarSign,
       items: [
-        { label: "Monthly Income", value: financialData?.monthly_income ? `₹${financialData.monthly_income.toLocaleString()}` : "Not provided", complete: !!financialData?.monthly_income, critical: true },
-        { label: "Monthly Expenses", value: financialData?.monthly_expenses ? `₹${financialData.monthly_expenses.toLocaleString()}` : "Not provided", complete: !!financialData?.monthly_expenses, critical: true },
-        { label: "Total Assets", value: financialData?.total_assets ? `₹${financialData.total_assets.toLocaleString()}` : "Not provided", complete: !!financialData?.total_assets, critical: false },
-        { label: "Total Liabilities", value: financialData?.total_liabilities ? `₹${financialData.total_liabilities.toLocaleString()}` : "₹0", complete: true, critical: false }
+        { 
+          label: "Monthly Income", 
+          value: effectiveFinancialData?.monthly_income ? `₹${effectiveFinancialData.monthly_income.toLocaleString()}` : 
+                 (client.annual_income ? `₹${(client.annual_income / 12).toLocaleString()} (estimated)` : "Not provided"), 
+          complete: !!(effectiveFinancialData?.monthly_income || client.annual_income), 
+          critical: true 
+        },
+        { 
+          label: "Monthly Expenses", 
+          value: effectiveFinancialData?.monthly_expenses ? `₹${effectiveFinancialData.monthly_expenses.toLocaleString()}` : "Not provided", 
+          complete: !!effectiveFinancialData?.monthly_expenses, 
+          critical: false 
+        },
+        { 
+          label: "Total Assets", 
+          value: effectiveFinancialData?.total_assets ? `₹${effectiveFinancialData.total_assets.toLocaleString()}` : "Not provided", 
+          complete: !!effectiveFinancialData?.total_assets, 
+          critical: false 
+        },
+        { 
+          label: "Total Liabilities", 
+          value: effectiveFinancialData?.total_liabilities ? `₹${effectiveFinancialData.total_liabilities.toLocaleString()}` : "₹0 (assumed)", 
+          complete: true, 
+          critical: false 
+        }
       ]
     },
     {
@@ -180,43 +269,66 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Client Data Review</h3>
         <div className="flex items-center space-x-2">
-          <Badge variant={completionScore >= 50 ? "default" : "destructive"}>
+          <Badge variant={completionScore >= 50 ? "default" : completionScore >= 35 ? "secondary" : "destructive"}>
             {completionScore}% Complete
           </Badge>
           {completionScore >= 50 ? (
             <CheckCircle className="w-5 h-5 text-green-500" />
+          ) : completionScore >= 35 ? (
+            <CheckCircle className="w-5 h-5 text-yellow-500" />
           ) : (
-            <AlertCircle className="w-5 h-5 text-yellow-500" />
+            <AlertCircle className="w-5 h-5 text-red-500" />
           )}
         </div>
       </div>
 
-      {completionScore < 50 ? (
+      {!financialData && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="pt-4">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-blue-600" />
+                <p className="text-sm font-medium text-blue-800">
+                  No detailed financial data found. Would you like to create a financial profile?
+                </p>
+              </div>
+              <Button 
+                size="sm" 
+                onClick={handleCreateFinancialData}
+                disabled={createFinancialDataMutation.isPending}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                {createFinancialDataMutation.isPending ? "Creating..." : "Create Financial Profile"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {completionScore < 35 && missingCriticalFields.length > 0 ? (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-4">
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <p className="text-sm font-medium text-red-800">
-                  Critical data missing for financial plan generation
+                  Some essential information is missing
                 </p>
               </div>
-              {missingCriticalFields.length > 0 && (
-                <div>
-                  <p className="text-xs text-red-700 mb-1">Missing critical fields:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {missingCriticalFields.map((field, index) => (
-                      <Badge key={index} variant="destructive" className="text-xs">
-                        {field.label}
-                      </Badge>
-                    ))}
-                  </div>
+              <div>
+                <p className="text-xs text-red-700 mb-1">Missing critical fields:</p>
+                <div className="flex flex-wrap gap-1">
+                  {missingCriticalFields.map((field, index) => (
+                    <Badge key={index} variant="destructive" className="text-xs">
+                      {field.label}
+                    </Badge>
+                  ))}
                 </div>
-              )}
+              </div>
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline" onClick={handleAddMissingData}>
+                <Button size="sm" variant="outline" onClick={handleCreateFinancialData}>
                   <Plus className="w-3 h-3 mr-1" />
-                  Add Missing Data
+                  Add Financial Data
                 </Button>
                 <Button size="sm" variant="destructive" onClick={handleProceedAnyway}>
                   Proceed Anyway
@@ -225,14 +337,14 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
             </div>
           </CardContent>
         </Card>
-      ) : completionScore < 80 ? (
+      ) : completionScore < 70 ? (
         <Card className="border-yellow-200 bg-yellow-50">
           <CardContent className="pt-4">
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-yellow-600" />
                 <p className="text-sm text-yellow-800">
-                  Sufficient data available for plan generation. Additional data can improve plan quality.
+                  Ready for basic plan generation. Additional data can improve plan quality.
                 </p>
               </div>
               {missingImportantFields.length > 0 && (
@@ -304,6 +416,21 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
           </Card>
         ))}
       </div>
+
+      {/* Always show proceed anyway option */}
+      <Card className="border-gray-200">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600">
+              Ready to proceed with current data?
+            </p>
+            <Button variant="outline" onClick={handleProceedAnyway}>
+              Proceed to Plan Generation
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
