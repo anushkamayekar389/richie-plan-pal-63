@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -87,8 +88,8 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     setCompletionScore(score);
     
     // Lower threshold to 50% and allow progression with basic data
-    const hasBasicData = client.first_name && client.email && (financialData?.monthly_income || financialData?.total_assets);
-    const canProceed = score >= 50 || hasBasicData;
+    const hasBasicData = !!(client.first_name && client.email && (financialData?.monthly_income || financialData?.total_assets));
+    const canProceed = Boolean(score >= 50 || hasBasicData);
     onDataComplete(canProceed);
   }, [client, financialData, riskProfile, onDataComplete]);
 
