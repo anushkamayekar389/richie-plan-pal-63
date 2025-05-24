@@ -41,29 +41,15 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     }
   });
 
-  // Fetch client's goals
-  const { data: goals } = useQuery({
-    queryKey: ['client-goals', client.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('financial_goals')
-        .select('*')
-        .eq('client_id', client.id);
-      return data || [];
-    }
-  });
-
   useEffect(() => {
     // Calculate completion score
     let score = 0;
     const checks = [
-      { condition: !!client.first_name && !!client.last_name, weight: 10 },
-      { condition: !!client.email, weight: 10 },
-      { condition: !!financialData?.monthly_income, weight: 20 },
-      { condition: !!financialData?.monthly_expenses, weight: 20 },
-      { condition: !!financialData?.total_assets, weight: 15 },
-      { condition: !!riskProfile?.risk_tolerance_score, weight: 15 },
-      { condition: goals && goals.length > 0, weight: 10 }
+      { condition: !!client.first_name && !!client.last_name, weight: 15 },
+      { condition: !!client.email, weight: 15 },
+      { condition: !!financialData?.monthly_income, weight: 25 },
+      { condition: !!financialData?.monthly_expenses, weight: 25 },
+      { condition: !!financialData?.total_assets, weight: 20 }
     ];
 
     checks.forEach(check => {
@@ -72,7 +58,7 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
 
     setCompletionScore(score);
     onDataComplete(score >= 80); // Require 80% completion
-  }, [client, financialData, riskProfile, goals, onDataComplete]);
+  }, [client, financialData, riskProfile, onDataComplete]);
 
   const dataCompleteness = [
     {
@@ -105,11 +91,11 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
       ]
     },
     {
-      category: "Financial Goals",
+      category: "Planning Goals",
       icon: Target,
       items: [
-        { label: "Goals Defined", value: goals ? `${goals.length} goals` : "No goals", complete: goals && goals.length > 0 },
-        { label: "Priority Goals", value: goals?.filter(g => g.priority === 'high').length || 0, complete: true }
+        { label: "Goals Setup", value: "Ready for planning", complete: true },
+        { label: "Priority Focus", value: "To be defined in plan", complete: true }
       ]
     }
   ];
