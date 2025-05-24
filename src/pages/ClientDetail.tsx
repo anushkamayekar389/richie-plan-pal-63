@@ -1,18 +1,16 @@
+
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, FileText, Pencil, Users, Share, Plus } from "lucide-react";
+import { ChevronLeft, FileText, Pencil, Users, Share } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientSharingDialog } from "@/components/ClientSharingDialog";
-import { CreatePlanDialog } from "@/components/clients/CreatePlanDialog";
 
 const ClientDetail = () => {
   const { id } = useParams();
-  const [createPlanOpen, setCreatePlanOpen] = useState(false);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", id],
@@ -64,11 +62,8 @@ const ClientDetail = () => {
           </div>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={() => setCreatePlanOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Create Financial Plan
-          </Button>
           <ClientSharingDialog clientId={client.id} clientName={`${client.first_name} ${client.last_name}`} />
-          <Button variant="outline">
+          <Button>
             <Pencil className="w-4 h-4 mr-2" /> Edit Client
           </Button>
         </div>
@@ -107,7 +102,7 @@ const ClientDetail = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Financial Plans</CardTitle>
-                  <Button size="sm" onClick={() => setCreatePlanOpen(true)}>
+                  <Button size="sm">
                     <FileText className="w-4 h-4 mr-2" /> Create New Plan
                   </Button>
                 </CardHeader>
@@ -161,12 +156,6 @@ const ClientDetail = () => {
           </Tabs>
         </div>
       </div>
-
-      <CreatePlanDialog 
-        open={createPlanOpen} 
-        onOpenChange={setCreatePlanOpen}
-        client={client}
-      />
     </div>
   );
 };

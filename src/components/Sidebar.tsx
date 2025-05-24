@@ -12,8 +12,7 @@ import {
   Settings,
   LogOut,
   User,
-  Users2,
-  Target
+  Users2
 } from "lucide-react";
 
 export function Sidebar() {
@@ -22,7 +21,6 @@ export function Sidebar() {
   
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Plan Builder", href: "/plan-builder", icon: Target },
     { name: "Clients", href: "/clients", icon: Users },
     { name: "Financial Plans", href: "/financial-plans", icon: FileText },
     { name: "Calendar", href: "/calendar", icon: Calendar },

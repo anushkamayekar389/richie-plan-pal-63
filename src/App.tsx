@@ -12,7 +12,6 @@ import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import FinancialPlans from "./pages/FinancialPlans";
 import FinancialPlanDetail from "./pages/FinancialPlanDetail";
-import PlanBuilder from "./pages/PlanBuilder";
 import Profile from "./pages/Profile";
 import Calculators from "./pages/Calculators";
 import Calendar from "./pages/Calendar";
@@ -36,7 +35,6 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/clients/:id" element={<ClientDetail />} />
-            <Route path="/plan-builder" element={<PlanBuilder />} />
             <Route path="/financial-plans" element={<FinancialPlans />} />
             <Route path="/financial-plans/:id" element={<FinancialPlanDetail />} />
             <Route path="/calculators" element={<Calculators />} />
