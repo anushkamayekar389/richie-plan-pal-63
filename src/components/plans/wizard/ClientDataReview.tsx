@@ -1,13 +1,19 @@
-
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle, User, DollarSign, Target, Shield, Plus } from "lucide-react";
+import { AlertCircle, CheckCircle, User, DollarSign, Target, Shield } from "lucide-react";
 import { type Client } from "@/hooks/use-clients";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { DataCompletionCard } from "./components/DataCompletionCard";
+import { DataSectionCard } from "./components/DataSectionCard";
+import { FinancialDataActions } from "./components/FinancialDataActions";
+import { 
+  calculateCompletionScore, 
+  canProceedWithPlan, 
+  getMissingCriticalFields, 
+  getMissingImportantFields 
+} from "./utils/ClientDataCalculations";
 
 interface ClientDataReviewProps {
   client: Client;
@@ -71,11 +77,11 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     mutationFn: async (clientId: string) => {
       const defaultData = {
         client_id: clientId,
-        monthly_income: 50000, // Default value
-        monthly_expenses: 30000, // Default value
-        total_assets: 100000, // Default value
-        total_liabilities: 20000, // Default value
-        emergency_fund: 30000, // Default value
+        monthly_income: 50000,
+        monthly_expenses: 30000,
+        total_assets: 100000,
+        total_liabilities: 20000,
+        emergency_fund: 30000,
         additional_income: 0
       };
 
@@ -108,37 +114,10 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
   useEffect(() => {
     if (financialLoading || riskLoading) return;
     
-    // Calculate completion score with improved logic
-    let score = 0;
-    const checks = [
-      { condition: !!(client.first_name && client.last_name), weight: 20, label: "Full Name" },
-      { condition: !!client.email, weight: 20, label: "Email" },
-      { condition: !!client.phone, weight: 10, label: "Phone" },
-      { condition: !!client.address, weight: 10, label: "Address" },
-      { condition: !!financialData?.monthly_income, weight: 25, label: "Income Data" },
-      { condition: !!financialData?.monthly_expenses, weight: 10, label: "Monthly Expenses" },
-      { condition: !!financialData?.total_assets, weight: 5, label: "Total Assets" }
-    ];
-
-    checks.forEach(check => {
-      if (check.condition) score += check.weight;
-    });
-
-    console.log('Completion score calculation:', { 
-      score, 
-      checks, 
-      client, 
-      financialData, 
-      riskProfile 
-    });
-    
+    const score = calculateCompletionScore(client, financialData, riskProfile);
     setCompletionScore(score);
     
-    // Lower threshold to 30% and be more flexible with basic data
-    const hasBasicData = !!(client.first_name && client.email);
-    const canProceed = Boolean(score >= 30 || hasBasicData);
-    
-    console.log('Can proceed check:', { score, hasBasicData, canProceed });
+    const canProceed = canProceedWithPlan(client, score);
     onDataComplete(canProceed);
   }, [client, financialData, riskProfile, onDataComplete, financialLoading, riskLoading]);
 
@@ -147,7 +126,6 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
   };
 
   const handleProceedAnyway = () => {
-    console.log('User chose to proceed with available data');
     onDataComplete(true);
     toast({
       title: "Proceeding with available data",
@@ -229,13 +207,8 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
     }
   ];
 
-  const missingCriticalFields = dataCompleteness.flatMap(section => 
-    section.items.filter(item => item.critical && !item.complete)
-  );
-
-  const missingImportantFields = dataCompleteness.flatMap(section => 
-    section.items.filter(item => !item.critical && !item.complete)
-  );
+  const missingCriticalFields = getMissingCriticalFields(dataCompleteness);
+  const missingImportantFields = getMissingImportantFields(dataCompleteness);
 
   return (
     <div className="space-y-6">
@@ -255,154 +228,27 @@ export function ClientDataReview({ client, onDataComplete }: ClientDataReviewPro
         </div>
       </div>
 
-      {!financialData && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-blue-600" />
-                <p className="text-sm font-medium text-blue-800">
-                  No detailed financial data found. Would you like to create a financial profile?
-                </p>
-              </div>
-              <Button 
-                size="sm" 
-                onClick={handleCreateFinancialData}
-                disabled={createFinancialDataMutation.isPending}
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                {createFinancialDataMutation.isPending ? "Creating..." : "Create Financial Profile"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <FinancialDataActions
+        hasFinancialData={!!financialData}
+        onCreateFinancialData={handleCreateFinancialData}
+        onProceedAnyway={handleProceedAnyway}
+        isCreating={createFinancialDataMutation.isPending}
+      />
 
-      {completionScore < 30 && missingCriticalFields.length > 0 ? (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-red-600" />
-                <p className="text-sm font-medium text-red-800">
-                  Some essential information is missing
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-red-700 mb-1">Missing critical fields:</p>
-                <div className="flex flex-wrap gap-1">
-                  {missingCriticalFields.map((field, index) => (
-                    <Badge key={index} variant="destructive" className="text-xs">
-                      {field.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <Button size="sm" variant="outline" onClick={handleCreateFinancialData}>
-                  <Plus className="w-3 h-3 mr-1" />
-                  Add Financial Data
-                </Button>
-                <Button size="sm" variant="destructive" onClick={handleProceedAnyway}>
-                  Proceed Anyway
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : completionScore < 70 ? (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="pt-4">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-yellow-600" />
-                <p className="text-sm text-yellow-800">
-                  Ready for basic plan generation. Additional data can improve plan quality.
-                </p>
-              </div>
-              {missingImportantFields.length > 0 && (
-                <div>
-                  <p className="text-xs text-yellow-700 mb-1">Optional fields that could enhance your plan:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {missingImportantFields.slice(0, 3).map((field, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {field.label}
-                      </Badge>
-                    ))}
-                    {missingImportantFields.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{missingImportantFields.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <p className="text-sm text-green-800">
-                Excellent! Your client data is comprehensive and ready for detailed financial planning.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <DataCompletionCard
+        completionScore={completionScore}
+        missingCriticalFields={missingCriticalFields}
+        missingImportantFields={missingImportantFields}
+        onCreateFinancialData={handleCreateFinancialData}
+        onProceedAnyway={handleProceedAnyway}
+        isCreatingFinancialData={createFinancialDataMutation.isPending}
+      />
 
       <div className="grid gap-4">
         {dataCompleteness.map((section, index) => (
-          <Card key={index}>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center space-x-2 text-base">
-                <section.icon className="w-5 h-5" />
-                <span>{section.category}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {section.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{item.label}:</span>
-                      {item.critical && (
-                        <Badge variant="outline" className="text-xs px-1 py-0">
-                          Critical
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm">{item.value}</span>
-                      {item.complete ? (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <AlertCircle className={`w-4 h-4 ${item.critical ? 'text-red-500' : 'text-yellow-500'}`} />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <DataSectionCard key={index} section={section} />
         ))}
       </div>
-
-      {/* Always show proceed anyway option */}
-      <Card className="border-gray-200">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              Ready to proceed with current data?
-            </p>
-            <Button variant="outline" onClick={handleProceedAnyway}>
-              Proceed to Plan Generation
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
