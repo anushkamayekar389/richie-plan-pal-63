@@ -1,6 +1,6 @@
 import { Reminder, CreateReminderInput } from "@/types/reminder";
 
-export { Reminder, CreateReminderInput };
+export type { Reminder, CreateReminderInput };
 
 export class ReminderService {
   private static instance: ReminderService;
