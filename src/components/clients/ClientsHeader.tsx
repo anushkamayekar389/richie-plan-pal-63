@@ -1,5 +1,5 @@
 
-import { AddClientDialog } from "./AddClientDialog";
+import { EnhancedClientOnboarding } from "./EnhancedClientOnboarding";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClientsHeaderProps {
@@ -13,9 +13,9 @@ export const ClientsHeader = ({ onClientAdded }: ClientsHeaderProps) => {
     <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'}`}>
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">Clients</h1>
-        <p className="text-gray-500 mt-1">Manage your client relationships and information</p>
+        <p className="text-gray-500 mt-1">Manage your client relationships and comprehensive financial profiles</p>
       </div>
-      <AddClientDialog onClientAdded={onClientAdded} />
+      <EnhancedClientOnboarding onClientAdded={onClientAdded} />
     </div>
   );
 };
