@@ -1,8 +1,8 @@
-
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, FileText, BarChart4, AlertCircle, ArrowRight, Users } from "lucide-react";
+import { CalendarDays, FileText, BarChart4, AlertCircle, ArrowRight, Users, Target } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   return (
@@ -12,7 +12,17 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-gray-500">Welcome back, Rahul! Here's an overview of your financial advisory practice.</p>
         </div>
-        <Button>Create New Financial Plan</Button>
+        <div className="flex space-x-3">
+          <Link to="/plan-builder">
+            <Button variant="outline">
+              <Target className="w-4 h-4 mr-2" />
+              Plan Builder
+            </Button>
+          </Link>
+          <Link to="/financial-plans">
+            <Button>Create New Financial Plan</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
