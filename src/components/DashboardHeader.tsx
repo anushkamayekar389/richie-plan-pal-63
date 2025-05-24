@@ -10,15 +10,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
+import { Link } from "react-router-dom";
 
 export function DashboardHeader() {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-gray-200">
       <div className="flex items-center w-full max-w-md">
         <Search className="w-4 h-4 mr-2 text-gray-400" />
         <Input 
           type="search" 
-          placeholder="Search..." 
+          placeholder="Search clients, plans, reminders..." 
           className="h-9 border-none shadow-none focus-visible:ring-0" 
         />
       </div>
@@ -43,6 +47,12 @@ export function DashboardHeader() {
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">
                 <div className="flex flex-col">
+                  <span className="font-medium">New Reminder Created</span>
+                  <span className="text-sm text-gray-500">KYC update reminder for Raj Mehta</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <div className="flex flex-col">
                   <span className="font-medium">Financial Plan Generated</span>
                   <span className="text-sm text-gray-500">The financial plan for Priya Patel is ready</span>
                 </div>
@@ -55,19 +65,23 @@ export function DashboardHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                RP
+                {user?.email ? user.email.charAt(0).toUpperCase() : 'RP'}
               </div>
-              <span className="font-medium">Rahul Patel</span>
+              <span className="font-medium">{user?.email || 'Rahul Patel'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/profile">Profile</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings">Settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Credits: ₹1,990</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

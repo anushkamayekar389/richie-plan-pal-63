@@ -1,6 +1,7 @@
 
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
+import { DashboardHeader } from "@/components/DashboardHeader";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const AuthLayout = () => {
@@ -9,6 +10,7 @@ const AuthLayout = () => {
       <div className="flex h-screen bg-gray-50">
         <Sidebar />
         <div className="flex-1 overflow-auto">
+          <DashboardHeader />
           <div className="container px-6 py-8 max-w-7xl">
             <Outlet />
           </div>

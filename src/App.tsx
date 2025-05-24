@@ -13,6 +13,8 @@ import ClientDetail from "./pages/ClientDetail";
 import FinancialPlans from "./pages/FinancialPlans";
 import FinancialPlanDetail from "./pages/FinancialPlanDetail";
 import Profile from "./pages/Profile";
+import Calculators from "./pages/Calculators";
+import Calendar from "./pages/Calendar";
 import AuthLayout from "./layouts/AuthLayout";
 
 const queryClient = new QueryClient();
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/clients/:id" element={<ClientDetail />} />
             <Route path="/financial-plans" element={<FinancialPlans />} />
             <Route path="/financial-plans/:id" element={<FinancialPlanDetail />} />
+            <Route path="/calculators" element={<Calculators />} />
+            <Route path="/calendar" element={<Calendar />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           
