@@ -82,8 +82,8 @@ export function RiskProfileStep({ data, onDataChange }: RiskProfileStepProps) {
   };
 
   const calculateRiskProfile = () => {
-    const totalScore = Object.values(answers).reduce((sum: number, answer: any) => {
-      const question = riskQuestions.find(q => q.id.toString() === Object.keys(answers).find(key => answers[key] === answer));
+    const totalScore = Object.entries(answers).reduce((sum: number, [questionId, answer]) => {
+      const question = riskQuestions.find(q => q.id === parseInt(questionId));
       const option = question?.options.find(opt => opt.value === answer);
       return sum + (option?.score || 0);
     }, 0);

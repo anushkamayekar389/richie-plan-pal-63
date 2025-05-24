@@ -9,9 +9,10 @@ interface ClientsListProps {
   clients: Client[];
   isLoading: boolean;
   onAddClientClick: () => void;
+  onGeneratePlan?: (client: Client) => void;
 }
 
-export const ClientsList = ({ clients, isLoading, onAddClientClick }: ClientsListProps) => {
+export const ClientsList = ({ clients, isLoading, onAddClientClick, onGeneratePlan }: ClientsListProps) => {
   if (isLoading) {
     return (
       <Card>
@@ -67,7 +68,12 @@ export const ClientsList = ({ clients, isLoading, onAddClientClick }: ClientsLis
       <CardContent className="p-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
           {clients.map((client, index) => (
-            <ClientCard key={client.id} client={client} index={index} />
+            <ClientCard 
+              key={client.id} 
+              client={client} 
+              index={index}
+              onGeneratePlan={onGeneratePlan}
+            />
           ))}
         </div>
       </CardContent>
