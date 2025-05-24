@@ -12,6 +12,8 @@ import { AssetsLiabilitiesStep } from "./onboarding/AssetsLiabilitiesStep";
 import { InsuranceCoverageStep } from "./onboarding/InsuranceCoverageStep";
 import { DocumentsStep } from "./onboarding/DocumentsStep";
 import { RiskProfileStep } from "./onboarding/RiskProfileStep";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface ClientOnboardingFlowProps {
   onClose: () => void;
@@ -56,8 +58,79 @@ export function ClientOnboardingFlow({ onClose, onComplete }: ClientOnboardingFl
     setClientData(prev => ({ ...prev, ...stepData }));
   };
 
-  const handleComplete = () => {
-    onComplete(clientData);
+  const handleComplete = async () => {
+    try {
+      // Separate data for different tables
+      const clientBasicData = {
+        first_name: clientData.first_name,
+        last_name: clientData.last_name,
+        email: clientData.email,
+        phone: clientData.phone,
+        address: clientData.address
+      };
+
+      // Insert client basic data first
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert([clientBasicData])
+        .select()
+        .single();
+
+      if (clientError) throw clientError;
+
+      // Insert financial data if present
+      if (clientData.monthly_income || clientData.monthly_expenses || clientData.additional_income) {
+        const financialData = {
+          client_id: newClient.id,
+          monthly_income: clientData.monthly_income || 0,
+          monthly_expenses: clientData.monthly_expenses || 0,
+          additional_income: clientData.additional_income || 0,
+          total_assets: clientData.total_assets || 0,
+          total_liabilities: clientData.total_liabilities || 0,
+          emergency_fund: clientData.emergency_fund || 0
+        };
+
+        const { error: financialError } = await supabase
+          .from('client_financial_data')
+          .insert([financialData]);
+
+        if (financialError) throw financialError;
+      }
+
+      // Insert risk profile if present
+      if (clientData.risk_score && clientData.risk_profile) {
+        const riskData = {
+          client_id: newClient.id,
+          risk_tolerance_score: clientData.risk_score,
+          risk_profile: clientData.risk_profile,
+          investment_horizon: clientData.investment_horizon || 'medium',
+          investment_knowledge: clientData.investment_knowledge || 'basic',
+          market_volatility: clientData.market_volatility || 'moderate',
+          portfolio_loss: clientData.portfolio_loss || 'low',
+          risk_tolerance: clientData.risk_tolerance || 'moderate'
+        };
+
+        const { error: riskError } = await supabase
+          .from('risk_profiles')
+          .insert([riskData]);
+
+        if (riskError) throw riskError;
+      }
+
+      toast({
+        title: "Client added successfully",
+        description: `${newClient.first_name} ${newClient.last_name} has been onboarded successfully`,
+      });
+
+      onComplete(newClient);
+    } catch (error: any) {
+      console.error('Error saving client data:', error);
+      toast({
+        title: "Error adding client",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
