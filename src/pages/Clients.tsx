@@ -5,9 +5,11 @@ import { useClients } from "@/hooks/use-clients";
 import { ClientsHeader } from "@/components/clients/ClientsHeader";
 import { ClientsSearch } from "@/components/clients/ClientsSearch";
 import { ClientsList } from "@/components/clients/ClientsList";
+import { FinancialPlanWizard } from "@/components/plans/FinancialPlanWizard";
 
 const Clients = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedClientForPlan, setSelectedClientForPlan] = useState<{id: string, name: string} | null>(null);
   const { data: clients = [], isLoading, refetch } = useClients();
 
   const filteredClients = clients.filter((client) => {
@@ -20,8 +22,15 @@ const Clients = () => {
     );
   });
 
-  const handleClientAdded = () => {
+  const handleClientAdded = (newClient?: any) => {
     refetch();
+    // Show plan generation wizard for new client
+    if (newClient && newClient.id) {
+      setSelectedClientForPlan({
+        id: newClient.id,
+        name: `${newClient.first_name} ${newClient.last_name}`
+      });
+    }
   };
 
   const handleAddClientClick = () => {
@@ -46,6 +55,10 @@ const Clients = () => {
             clients={filteredClients} 
             isLoading={isLoading}
             onAddClientClick={handleAddClientClick}
+            onGeneratePlan={(client) => setSelectedClientForPlan({
+              id: client.id,
+              name: `${client.first_name} ${client.last_name}`
+            })}
           />
         </TabsContent>
         <TabsContent value="active">
@@ -64,6 +77,14 @@ const Clients = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {selectedClientForPlan && (
+        <FinancialPlanWizard
+          clientName={selectedClientForPlan.name}
+          clientId={selectedClientForPlan.id}
+          onClose={() => setSelectedClientForPlan(null)}
+        />
+      )}
     </div>
   );
 };
