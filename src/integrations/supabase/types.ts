@@ -103,35 +103,130 @@ export type Database = {
           },
         ]
       }
+      client_onboarding_data: {
+        Row: {
+          auto_filled_fields: string[] | null
+          client_id: string | null
+          created_at: string
+          data_quality_score: number | null
+          id: string
+          import_metadata: Json | null
+          manual_overrides: string[] | null
+          onboarding_data: Json
+          source: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          auto_filled_fields?: string[] | null
+          client_id?: string | null
+          created_at?: string
+          data_quality_score?: number | null
+          id?: string
+          import_metadata?: Json | null
+          manual_overrides?: string[] | null
+          onboarding_data: Json
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          auto_filled_fields?: string[] | null
+          client_id?: string | null
+          created_at?: string
+          data_quality_score?: number | null
+          id?: string
+          import_metadata?: Json | null
+          manual_overrides?: string[] | null
+          onboarding_data?: Json
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_onboarding_data_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
+          age: number | null
+          annual_income: number | null
+          city: string | null
           created_at: string
+          data_source: string | null
+          date_of_birth: string | null
+          dependents: number | null
           email: string
+          employer: string | null
           first_name: string
+          gender: string | null
           id: string
+          investment_experience: string | null
           last_name: string
+          occupation: string | null
+          onboarding_completed: boolean | null
+          pan_number: string | null
           phone: string | null
+          pincode: string | null
+          risk_tolerance: string | null
+          state: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          age?: number | null
+          annual_income?: number | null
+          city?: string | null
           created_at?: string
+          data_source?: string | null
+          date_of_birth?: string | null
+          dependents?: number | null
           email: string
+          employer?: string | null
           first_name: string
+          gender?: string | null
           id?: string
+          investment_experience?: string | null
           last_name: string
+          occupation?: string | null
+          onboarding_completed?: boolean | null
+          pan_number?: string | null
           phone?: string | null
+          pincode?: string | null
+          risk_tolerance?: string | null
+          state?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          age?: number | null
+          annual_income?: number | null
+          city?: string | null
           created_at?: string
+          data_source?: string | null
+          date_of_birth?: string | null
+          dependents?: number | null
           email?: string
+          employer?: string | null
           first_name?: string
+          gender?: string | null
           id?: string
+          investment_experience?: string | null
           last_name?: string
+          occupation?: string | null
+          onboarding_completed?: boolean | null
+          pan_number?: string | null
           phone?: string | null
+          pincode?: string | null
+          risk_tolerance?: string | null
+          state?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -167,6 +262,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "financial_plan_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_plans: {
+        Row: {
+          added_by: string
+          client_id: string
+          created_at: string
+          id: string
+          plan_data: Json
+          plan_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string
+          client_id: string
+          created_at?: string
+          id?: string
+          plan_data: Json
+          plan_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          plan_data?: Json
+          plan_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_plans_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
