@@ -9,513 +9,285 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      calendar_events: {
+      financial_data: {
         Row: {
-          client_id: string | null
+          actual_savings: number
           created_at: string
-          created_by: string | null
-          description: string | null
-          event_date: string
-          event_time: string | null
-          id: string
-          location: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          client_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          event_date: string
-          event_time?: string | null
-          id?: string
-          location?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          event_date?: string
-          event_time?: string | null
-          id?: string
-          location?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calendar_events_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      client_financial_data: {
-        Row: {
-          additional_income: number
-          client_id: string | null
-          created_at: string | null
-          emergency_fund: number
+          fixed_deposits: number
           id: string
           monthly_expenses: number
           monthly_income: number
-          total_assets: number
-          total_liabilities: number
-          updated_at: string | null
+          mutual_funds: number
+          real_estate: number
+          required_savings: number
+          stocks: number
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          additional_income?: number
-          client_id?: string | null
-          created_at?: string | null
-          emergency_fund?: number
+          actual_savings?: number
+          created_at?: string
+          fixed_deposits?: number
           id?: string
           monthly_expenses?: number
           monthly_income?: number
-          total_assets?: number
-          total_liabilities?: number
-          updated_at?: string | null
+          mutual_funds?: number
+          real_estate?: number
+          required_savings?: number
+          stocks?: number
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          additional_income?: number
-          client_id?: string | null
-          created_at?: string | null
-          emergency_fund?: number
+          actual_savings?: number
+          created_at?: string
+          fixed_deposits?: number
           id?: string
           monthly_expenses?: number
           monthly_income?: number
-          total_assets?: number
-          total_liabilities?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_financial_data_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      client_onboarding_data: {
-        Row: {
-          auto_filled_fields: string[] | null
-          client_id: string | null
-          created_at: string
-          data_quality_score: number | null
-          id: string
-          import_metadata: Json | null
-          manual_overrides: string[] | null
-          onboarding_data: Json
-          source: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          auto_filled_fields?: string[] | null
-          client_id?: string | null
-          created_at?: string
-          data_quality_score?: number | null
-          id?: string
-          import_metadata?: Json | null
-          manual_overrides?: string[] | null
-          onboarding_data: Json
-          source?: string
+          mutual_funds?: number
+          real_estate?: number
+          required_savings?: number
+          stocks?: number
           updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          auto_filled_fields?: string[] | null
-          client_id?: string | null
-          created_at?: string
-          data_quality_score?: number | null
-          id?: string
-          import_metadata?: Json | null
-          manual_overrides?: string[] | null
-          onboarding_data?: Json
-          source?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_onboarding_data_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      clients: {
-        Row: {
-          address: string | null
-          age: number | null
-          annual_income: number | null
-          city: string | null
-          created_at: string
-          data_source: string | null
-          date_of_birth: string | null
-          dependents: number | null
-          email: string
-          employer: string | null
-          first_name: string
-          gender: string | null
-          id: string
-          investment_experience: string | null
-          last_name: string
-          occupation: string | null
-          onboarding_completed: boolean | null
-          pan_number: string | null
-          phone: string | null
-          pincode: string | null
-          risk_tolerance: string | null
-          state: string | null
-          updated_at: string
-        }
-        Insert: {
-          address?: string | null
-          age?: number | null
-          annual_income?: number | null
-          city?: string | null
-          created_at?: string
-          data_source?: string | null
-          date_of_birth?: string | null
-          dependents?: number | null
-          email: string
-          employer?: string | null
-          first_name: string
-          gender?: string | null
-          id?: string
-          investment_experience?: string | null
-          last_name: string
-          occupation?: string | null
-          onboarding_completed?: boolean | null
-          pan_number?: string | null
-          phone?: string | null
-          pincode?: string | null
-          risk_tolerance?: string | null
-          state?: string | null
-          updated_at?: string
-        }
-        Update: {
-          address?: string | null
-          age?: number | null
-          annual_income?: number | null
-          city?: string | null
-          created_at?: string
-          data_source?: string | null
-          date_of_birth?: string | null
-          dependents?: number | null
-          email?: string
-          employer?: string | null
-          first_name?: string
-          gender?: string | null
-          id?: string
-          investment_experience?: string | null
-          last_name?: string
-          occupation?: string | null
-          onboarding_completed?: boolean | null
-          pan_number?: string | null
-          phone?: string | null
-          pincode?: string | null
-          risk_tolerance?: string | null
-          state?: string | null
-          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
-      financial_plan_documents: {
+      financial_insights: {
         Row: {
-          client_id: string | null
-          created_at: string | null
-          file_name: string
-          file_path: string
-          file_size: number | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          client_id?: string | null
-          created_at?: string | null
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string | null
-          created_at?: string | null
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "financial_plan_documents_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      financial_plans: {
-        Row: {
-          added_by: string
-          client_id: string
           created_at: string
+          expense_to_income_ratio: number
+          financial_health_score: number
           id: string
-          plan_data: Json
-          plan_name: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          added_by?: string
-          client_id: string
-          created_at?: string
-          id?: string
-          plan_data: Json
-          plan_name: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          added_by?: string
-          client_id?: string
-          created_at?: string
-          id?: string
-          plan_data?: Json
-          plan_name?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "financial_plans_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      insurance_plans: {
-        Row: {
-          client_id: string
-          cover_amount: number
-          created_at: string
-          features: Json | null
-          id: string
-          is_recommended: boolean | null
-          name: string
-          plan_type: string
-          premium: number
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          cover_amount: number
-          created_at?: string
-          features?: Json | null
-          id?: string
-          is_recommended?: boolean | null
-          name: string
-          plan_type: string
-          premium: number
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          cover_amount?: number
-          created_at?: string
-          features?: Json | null
-          id?: string
-          is_recommended?: boolean | null
-          name?: string
-          plan_type?: string
-          premium?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "insurance_plans_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investment_plans: {
-        Row: {
-          allocation: Json
-          client_id: string
-          created_at: string
-          expected_return: number | null
-          id: string
-          is_recommended: boolean | null
-          name: string
+          insights: string
+          investment_to_income_ratio: number
+          monthly_expenses: number
+          monthly_income: number
+          mutual_funds_percentage: number | null
+          real_estate_percentage: number | null
+          recommendations: Json
+          risk_details: string
           risk_level: string
-          risk_profile_id: string
+          savings_rate: number
+          stocks_percentage: number | null
+          total_investments: number
           updated_at: string
-          value: number | null
+          user_id: string
         }
         Insert: {
-          allocation: Json
-          client_id: string
           created_at?: string
-          expected_return?: number | null
+          expense_to_income_ratio: number
+          financial_health_score: number
           id?: string
-          is_recommended?: boolean | null
-          name: string
+          insights: string
+          investment_to_income_ratio: number
+          monthly_expenses: number
+          monthly_income: number
+          mutual_funds_percentage?: number | null
+          real_estate_percentage?: number | null
+          recommendations: Json
+          risk_details: string
           risk_level: string
-          risk_profile_id: string
+          savings_rate: number
+          stocks_percentage?: number | null
+          total_investments: number
           updated_at?: string
-          value?: number | null
+          user_id: string
         }
         Update: {
-          allocation?: Json
-          client_id?: string
           created_at?: string
-          expected_return?: number | null
+          expense_to_income_ratio?: number
+          financial_health_score?: number
           id?: string
-          is_recommended?: boolean | null
-          name?: string
+          insights?: string
+          investment_to_income_ratio?: number
+          monthly_expenses?: number
+          monthly_income?: number
+          mutual_funds_percentage?: number | null
+          real_estate_percentage?: number | null
+          recommendations?: Json
+          risk_details?: string
           risk_level?: string
-          risk_profile_id?: string
+          savings_rate?: number
+          stocks_percentage?: number | null
+          total_investments?: number
           updated_at?: string
-          value?: number | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "investment_plans_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investment_plans_risk_profile_id_fkey"
-            columns: ["risk_profile_id"]
-            isOneToOne: false
-            referencedRelation: "risk_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
           created_at: string
-          email: string
-          first_name: string | null
+          full_name: string | null
           id: string
-          last_name: string | null
           phone: string | null
-          profile_picture: string | null
-          role: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
-          email: string
-          first_name?: string | null
+          full_name?: string | null
           id: string
-          last_name?: string | null
           phone?: string | null
-          profile_picture?: string | null
-          role?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
-          email?: string
-          first_name?: string | null
+          full_name?: string | null
           id?: string
-          last_name?: string | null
           phone?: string | null
-          profile_picture?: string | null
-          role?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
-      risk_profiles: {
+      "user details": {
         Row: {
-          client_id: string
           created_at: string
-          id: string
-          investment_horizon: string
-          investment_knowledge: string
-          market_volatility: string
-          portfolio_loss: string
-          risk_profile: string
-          risk_tolerance: string
-          risk_tolerance_score: number
-          updated_at: string
+          id: number
         }
         Insert: {
-          client_id: string
           created_at?: string
-          id?: string
-          investment_horizon: string
-          investment_knowledge: string
-          market_volatility: string
-          portfolio_loss: string
-          risk_profile: string
-          risk_tolerance: string
-          risk_tolerance_score: number
-          updated_at?: string
+          id?: number
         }
         Update: {
-          client_id?: string
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      user_concerns: {
+        Row: {
+          concern: string
+          created_at: string
+          id: string
+          priority: string | null
+          user_id: string
+        }
+        Insert: {
+          concern: string
           created_at?: string
           id?: string
-          investment_horizon?: string
-          investment_knowledge?: string
-          market_volatility?: string
-          portfolio_loss?: string
-          risk_profile?: string
-          risk_tolerance?: string
-          risk_tolerance_score?: number
-          updated_at?: string
+          priority?: string | null
+          user_id: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "risk_profiles_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
+        Update: {
+          concern?: string
+          created_at?: string
+          id?: string
+          priority?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_debts: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string | null
+          id: string
+          interest_rate: number | null
+          is_paid: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          interest_rate?: number | null
+          is_paid?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          interest_rate?: number | null
+          is_paid?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          category: string | null
+          created_at: string
+          current_amount: number | null
+          deadline: string | null
+          description: string | null
+          id: string
+          is_completed: boolean | null
+          target_amount: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          current_amount?: number | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_completed?: boolean | null
+          target_amount?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          current_amount?: number | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_completed?: boolean | null
+          target_amount?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      generate_client_financial_data: {
+      get_current_user_profile: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_risk_profile: {
-        Args: { score: number }
-        Returns: string
-      }
-      update_investment_plan_values: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          username: string | null
+        }[]
       }
     }
     Enums: {
