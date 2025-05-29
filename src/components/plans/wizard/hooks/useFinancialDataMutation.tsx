@@ -36,9 +36,9 @@ export function useFinancialDataMutation(clientId: string) {
         .from('client_financial_data')
         .select('id')
         .eq('client_id', clientId)
-        .single();
+        .maybeSingle();
 
-      if (existingError && existingError.code !== 'PGRST116') {
+      if (existingError) {
         console.error('Error checking existing financial data:', existingError);
         throw new Error(`Error checking existing data: ${existingError.message}`);
       }
@@ -48,7 +48,7 @@ export function useFinancialDataMutation(clientId: string) {
         throw new Error('Financial data already exists for this client');
       }
 
-      // Prepare and validate data
+      // Prepare default financial data
       const defaultData = {
         client_id: clientId,
         monthly_income: 50000,
@@ -60,17 +60,7 @@ export function useFinancialDataMutation(clientId: string) {
       };
 
       console.log('Prepared financial data:', defaultData);
-
-      // Validate required fields
-      if (!defaultData.client_id) {
-        throw new Error('Client ID is required');
-      }
-
-      if (typeof defaultData.monthly_income !== 'number' || defaultData.monthly_income < 0) {
-        throw new Error('Valid monthly income is required');
-      }
-
-      console.log('Data validation passed, inserting into database...');
+      console.log('Inserting financial data into database...');
 
       // Insert the financial data
       const { data, error } = await supabase

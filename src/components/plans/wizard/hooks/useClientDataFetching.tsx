@@ -14,9 +14,9 @@ export function useClientDataFetching(client: Client) {
           .from('client_financial_data')
           .select('*')
           .eq('client_id', client.id)
-          .single();
+          .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error('Financial data query error:', error);
           throw error;
         }
@@ -40,9 +40,9 @@ export function useClientDataFetching(client: Client) {
           .from('risk_profiles')
           .select('*')
           .eq('client_id', client.id)
-          .single();
+          .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error('Risk profile query error:', error);
           return null;
         }
